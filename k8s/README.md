@@ -1,8 +1,10 @@
-### Script for Installing and Deleting Helm Charts
+# Deploying Airbyte To K8s with Helm
+
+### Description
 
 
+Step-by-step guidance on how to deploy Airbyte into Kubernetes using Helm package manager
 
-This script is used to install and delete Helm charts using the `helm` CLI.
 
 ### Prerequisites
 
