@@ -1,0 +1,50 @@
+First, install Kubernetes and Helm if you haven't already.
+Add the Airbyte Helm repository:
+
+    helm repo add airbyte https://airbytehq.github.io/helm-charts
+    helm repo update
+
+
+helm install airbyte airbyte/airbyte -n airbyte -f values.yaml
+    helm install airbyte airbyte/airbyte -n airbyte -f ./helm/values.yaml
+
+forward port
+    kubectl --namespace airbyte port-forward service/airbyte-airbyte-webapp-svc 8000:80
+    "Visit http://localhost:8000"
+
+
+check chart version and deployments
+    helm list -n airbyte -f airbyte
+
+
+Redeploy a deleted deployment
+    helm upgrade --install airbyte airbyte/airbyte --set worker.enabled=true --reuse-values -n airbyte
+
+
+check the logs of a pod
+    kubectl logs -f airbyte-worker-767db5b6c7-4smkp -c airbyte-worker-container -n airbyte
+
+
+After updaing the values.yaml file use this to reapply changes
+
+    helm upgrade <RELEASE_NAME> <CHART_NAME> -f path/to/new/values.yaml -n <NAMESPACE>
+    helm upgrade airbyte airbyte/airbyte -f ./helm/values.yaml -n airbyte
+
+
+uopdate version
+    helm upgrade <RELEASE_NAME> <CHART_NAME> --version <CHART_VERSION> -f ./helm/values.yaml -n airbyte
+    helm upgrade airbyte airbyte/airbyte --version 0.43.29  -f ./helm/values.yaml -n airbyte
+
+
+
+search for a helm repo
+    helm search repo airbyte
+
+
+helm repo remove
+    helm repo remove [REPO1 [REPO2 ...]] [flags]
+
+Add the Bitnami repository to Helm with the following command:
+    helm repo add bitnami https://charts.bitnami.com/bitnami
+
+

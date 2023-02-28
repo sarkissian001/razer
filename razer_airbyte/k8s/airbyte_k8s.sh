@@ -3,7 +3,7 @@
 # Set default values
 default_chart_name="airbyte"
 default_chart_version="0.43.29"
-default_namespace="airbyte"
+default_namespace="dev-local"
 
 # Define helper function
 usage() {
@@ -25,8 +25,12 @@ install_chart() {
     echo "Chart $chart_name already exists, skipping installation."
   else
     if [ -n "$namespace" ]; then
+      echo "Installing $chart_name in '$namespace' namespace"
+      # TODO: add release name instead of hard code it to airbyte/$chart_name
       helm install $chart_name airbyte/$chart_name --version $chart_version -f ./helm/values.yaml --namespace $namespace
     else
+      echo "Installing $chart_name"
+      # TODO: add release name instead of hard code it to airbyte/$chart_name
       helm install $chart_name airbyte/$chart_name --version $chart_version -f ./helm/values.yaml
     fi
   fi

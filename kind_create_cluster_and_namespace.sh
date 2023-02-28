@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Set default cluster name and namespace name
-DEFAULT_CLUSTER_NAME="airbyte-cluster"
-DEFAULT_NAMESPACE="airbyte"
+DEFAULT_CLUSTER_NAME="razer-cluster"
+DEFAULT_NAMESPACE="dev-local"
 
 # Parse command line arguments
 if [ $# -ge 1 ]; then
@@ -31,7 +31,7 @@ kubectl config use-context kind-$CLUSTER_NAME
 CONTEXT_NAME=$(kubectl config current-context)
 echo "Current context is set to: $CONTEXT_NAME"
 
-# Verify that namespace was created
+# Create a namespace
 NAMESPACE_EXISTS=$(kubectl get namespace | grep -c "$NAMESPACE_NAME")
 if [ $NAMESPACE_EXISTS -eq 1 ]; then
   echo "Namespace '$NAMESPACE_NAME' already exists."
