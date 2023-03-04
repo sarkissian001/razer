@@ -791,6 +791,8 @@ worker:
   ##   value: "key=airbyte-server,operator=Equals,value=true,effect=NoSchedule"
 #  extraEnv: []
 
+
+  # Connect to Private Repository
   extraEnv:
     - name: JOB_KUBE_MAIN_CONTAINER_IMAGE_PULL_SECRET
       value: regcred

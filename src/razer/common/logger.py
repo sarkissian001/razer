@@ -12,7 +12,7 @@ class Logger:
 
         self.logger = logging.getLogger(name)
         self.logger.setLevel(self.level)
-        self.handler = logging.StreamHandler(sys.stdout)
+        self.handler = logging.StreamHandler(sys.stderr)
         self.handler.setLevel(self.level)
         formatter = logging.Formatter(
             "%(asctime)s - %(levelname)s - %(message)s", "%Y-%m-%dT%H:%M:%SZ"
