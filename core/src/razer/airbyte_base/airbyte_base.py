@@ -3,8 +3,8 @@ from typing import Dict, List, Optional, Union
 import aiohttp
 import requests
 
-from src.razer.Enums.airbyte_connector_types import ConnectionType
-from src.razer.common.logger import Logger
+from ..Enums.airbyte_connector_types import ConnectionType
+from ..common.logger import Logger
 
 
 class AirByteBase:

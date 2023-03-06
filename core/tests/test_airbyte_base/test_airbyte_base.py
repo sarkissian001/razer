@@ -1,6 +1,7 @@
 from asynctest import TestCase, patch, CoroutineMock
 
-from ...airbyte_base.airbyte_base import AirByteBase
+from core.src.razer.Enums.airbyte_connector_types import ConnectionType
+from core.src.razer.airbyte_base.airbyte_base import AirByteBase
 
 
 class TestAirByteBase(TestCase):
@@ -86,7 +87,7 @@ class TestAirByteBase(TestCase):
             ]
         }
 
-    @patch("src.razer.airbyte_base.airbyte_base.aiohttp.ClientSession.post")
+    @patch("core.src.razer.airbyte_base.airbyte_base.aiohttp.ClientSession.post")
     async def test_get_workspaces(self, mock_session):
         mock_session.return_value.__aenter__.return_value.json = CoroutineMock(
             side_effect=[self.workspace_data]
@@ -103,7 +104,7 @@ class TestAirByteBase(TestCase):
             headers={"Content-Type": "application/json"},
         )
 
-    @patch("src.razer.airbyte_base.airbyte_base.AirByteBase.get_workspaces")
+    @patch("core.src.razer.airbyte_base.airbyte_base.AirByteBase.get_workspaces")
     async def test_get_workspace_ids(self, mock_ws):
         mock_ws.return_value = self.workspace_data
 
@@ -119,7 +120,7 @@ class TestAirByteBase(TestCase):
 
         self.assertEqual(actual_response, expected_ws_ids)
 
-    @patch("src.razer.airbyte_base.airbyte_base.aiohttp.ClientSession.post")
+    @patch("core.src.razer.airbyte_base.airbyte_base.aiohttp.ClientSession.post")
     async def test_create_workspace(self, mock_session):
         expected = {
             "anonymousDataCollection": False,
@@ -155,7 +156,7 @@ class TestAirByteBase(TestCase):
             json={},
         )
 
-    @patch("src.razer.airbyte_base.airbyte_base.AirByteBase.get_workspaces")
+    @patch("core.src.razer.airbyte_base.airbyte_base.AirByteBase.get_workspaces")
     async def test_get_customer_id(self, mock_ws):
         mock_ws.return_value = self.workspace_data
 
@@ -166,7 +167,7 @@ class TestAirByteBase(TestCase):
 
         self.assertEqual(actual_response, expected_customer_id)
 
-    @patch("src.razer.airbyte_base.airbyte_base.aiohttp.ClientSession.post")
+    @patch("core.src.razer.airbyte_base.airbyte_base.aiohttp.ClientSession.post")
     async def test_get_workspace_connections(self, mock_session):
         expected_data = {
             "connections": [
@@ -250,7 +251,7 @@ class TestAirByteBase(TestCase):
             json={"workspaceId": "500f6675-e1a7-4408-b736-f69d15871b6f"},
         )
 
-    @patch("src.razer.airbyte_base.airbyte_base.aiohttp.ClientSession.post")
+    @patch("core.src.razer.airbyte_base.airbyte_base.aiohttp.ClientSession.post")
     async def test_sync_custom_connector(self, mock_session):
         expected_data = {
             "dockerImageTag": "latest",
