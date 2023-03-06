@@ -1,7 +1,6 @@
 from asynctest import TestCase, patch, CoroutineMock
 
-from src.razer.Enums.airbyte_connector_types import ConnectionType
-from src.razer.airbyte_base.airbyte_base import AirByteBase
+from ...airbyte_base.airbyte_base import AirByteBase
 
 
 class TestAirByteBase(TestCase):
