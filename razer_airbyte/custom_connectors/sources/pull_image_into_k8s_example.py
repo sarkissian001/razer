@@ -1,4 +1,8 @@
+import subprocess
+import os
+
 import asyncio
+
 
 from core.src.razer.airbyte_base.airbyte_base import AirByteBase
 from jobs.myexample.airbyte_stuff import ConnectionType
@@ -6,20 +10,37 @@ from jobs.myexample.airbyte_stuff import ConnectionType
 obj = AirByteBase()
 
 
-ws_id: list = asyncio.run(obj.get_workspace_ids())
+os.chdir("./source-pokeapi")
 
-print("ws-ids: ", ws_id)
 
-print(f"using workspace {ws_id[0]}")
+YOUR_REPOSITORY_NAME = "arsar7"
 
-res = asyncio.run(obj.sync_custom_connector(
-    workspace_id=ws_id[0],
-    image_tag="0.1.5",
-    repository_url="airbyte/source-pokeapi",
-    connection_name="Source Test1",
-    connector_type=ConnectionType.SOURCE
-
+# Build the Docker image
+subprocess.run(["docker", "build", "-t", "source-pokeapi:latest", "."])
+# Add a tag to the Docker image
+subprocess.run(
+    [
+        "docker",
+        "tag",
+        "source-pokeapi:latest",
+        f"{YOUR_REPOSITORY_NAME}/source-pokeapi:latest",
+    ]
 )
+subprocess.run(["docker", "push", f"{YOUR_REPOSITORY_NAME}/source-pokeapi:latest"])
+
+ws_id = asyncio.run(
+    obj.get_or_create_workspace(workspace_name="Test Workspace", email="test@fake.org")
+)
+print(f"using ws id {ws_id}")
+
+res = asyncio.run(
+    obj.sync_custom_connector(
+        workspace_id=ws_id,
+        image_tag="latest",
+        repository_url=f"{YOUR_REPOSITORY_NAME}/source-pokeapi",
+        connection_name="example-pokeapi-source",
+        connector_type=ConnectionType.SOURCE,
+    )
 )
 
 print(res)
