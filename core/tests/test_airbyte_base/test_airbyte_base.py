@@ -251,8 +251,14 @@ class TestAirByteBase(TestCase):
             json={"workspaceId": "500f6675-e1a7-4408-b736-f69d15871b6f"},
         )
 
+    @patch(
+        "core.src.razer.airbyte_base.airbyte_base.AirByteBase.get_all_connector_names"
+    )
     @patch("core.src.razer.airbyte_base.airbyte_base.aiohttp.ClientSession.post")
-    async def test_sync_custom_connector(self, mock_session):
+    async def test_sync_custom_connector(
+        self, mock_session, mock_custom_connector_names
+    ):
+        mock_custom_connector_names.return_value = []
         expected_data = {
             "dockerImageTag": "latest",
             "dockerRepository": "myuser/source-some-api",
@@ -294,3 +300,33 @@ class TestAirByteBase(TestCase):
             },
             timeout=300,
         )
+
+    @patch(
+        "core.src.razer.airbyte_base.airbyte_base.AirByteBase.get_all_connector_names"
+    )
+    @patch("core.src.razer.airbyte_base.airbyte_base.aiohttp.ClientSession.post")
+    async def test_sync_custom_connector_do_not_sync_if_exists(
+        self, mock_session, mock_custom_connector_names
+    ):
+        custom_connector_name = "My Source"
+
+        # assuming this custom connector exists in the ws
+        mock_custom_connector_names.return_value = [custom_connector_name]
+
+        mock_session.return_value.__aenter__.return_value.json = CoroutineMock(
+            side_effect=[None]
+        )
+
+        actual_response = await self.airbyte_base.sync_custom_connector(
+            workspace_id="500f6675-e1a7-4408-b736-f69d15871b6f",
+            connection_name=custom_connector_name,
+            repository_url="myuser/source-some-api",
+            image_tag="latest",
+            connector_type=ConnectionType.SOURCE,
+            documentation_url="docs",
+            ignore_if_exits=False,
+        )
+
+        self.assertEqual(actual_response, None)
+
+        assert mock_session.call_count == 0
