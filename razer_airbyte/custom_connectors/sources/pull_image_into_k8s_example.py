@@ -13,7 +13,7 @@ obj = AirByteBase()
 os.chdir("./source-pokeapi")
 
 
-YOUR_REPOSITORY_NAME = "arsar7"
+YOUR_REPOSITORY_NAME = "<>"
 
 # Build the Docker image
 subprocess.run(["docker", "build", "-t", "source-pokeapi:latest", "."])
