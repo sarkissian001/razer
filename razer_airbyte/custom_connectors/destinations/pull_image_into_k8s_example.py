@@ -1,7 +1,7 @@
 import asyncio
 
-from core.razer.airbyte_base.airbyte_base import AirByteBase
-from core.razer.Enums.airbyte_connector_types import ConnectionType
+from core.src.razer.airbyte_base.airbyte_base import AirByteBase
+from jobs.myexample.airbyte_stuff import ConnectionType
 
 obj = AirByteBase()
 
