@@ -1,0 +1,3 @@
+
+1. sh set_up_local_tls_docker_registry_and_create_k8s.sh
+2. python3 pull_image_into_k8s_using_local_docker_registry.py

@@ -1,0 +1,9 @@
+ {
+          "auths": {
+              "https://dockerhost:5005": {
+                  "username": "airbyte",
+                  "password": "airbyte1234",
+                  "auth": "YWlyYnl0ZTphaXJieXRlMTIzNA=="
+              }
+          }
+      }
