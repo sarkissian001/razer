@@ -45,7 +45,7 @@ sh build_razer_dagster_manager.sh
 
 Navigate to [razer_airbyte_dagster_project](Jobs%2Fuser_code%2Frazer_airbyte_dagster_project) and run 
 
-# (ATTENTION!!) 
+## Note!!: ) 
 - You need to follow Connection Templating pattern specified in [connections.py](Jobs%2Fuser_code%2Frazer_airbyte_dagster_project%2Frazer_airbyte_dagster_project%2Fconnections%2Fconnections.py) to set up appropriate source destinations.
   The sources and destinations are examples only.
 - You need to update the schedules and jobs as per your needs specified in [repository.py](Jobs%2Fuser_code%2Frazer_airbyte_dagster_project%2Frazer_airbyte_dagster_project%2Frepository.py)
