@@ -1,3 +1,4 @@
+import os
 from typing import Dict, List, Optional, Union
 
 import aiohttp
@@ -14,21 +15,18 @@ class AirByteBase:
 
     """
 
-    # TODO: we need to configure airbyte in such way that it requires user login details
-    # TODO: All headers should include auth token
-
     def __init__(
         self,
-        host: str = "localhost",
-        port: str = "8000",
-        username: Union[str, None] = None,
-        password_env: Union[str, None] = None,
+        host: str = os.getenv("AIRBYTE_HOST", "localhost"),
+        port: str = os.getenv("AIRBYTE_PORT", "8000"),
+        username: Union[str, None] = os.getenv("AIRBYTE_USERNAME", None),
+        password: Union[str, None] = os.getenv("AIRBYTE_PASSWORD", None),
         log_level: Union[str, None] = None,
     ):
         self.host = host
         self.port = port
         self.username = username
-        self.password_env = password_env
+        self.password_env = password
 
         self.base_url: str = f"http://{self.host}:{self.port}/api/v1"
 
@@ -117,13 +115,13 @@ class AirByteBase:
 
         return None
 
-    async def get_workspace_connections(self, workspace_id: str) -> List[str]:
+    async def get_ws_connections(self, workspace_id: str) -> List[Dict]:
         """
 
         Returns all connections that have been created in the workspace; that is source <> destination pairs
 
         @param workspace_id: str
-        @return: List of connection ids that belong to the given workspace
+        @return: List of connections
         """
         url = f"{self.base_url}/connections/list"
         headers = {"Content-Type": "application/json"}
@@ -141,7 +139,27 @@ class AirByteBase:
 
                 res: Dict = await response.json()
 
-                return [c["connectionId"] for c in res["connections"]]
+                return res["connections"]
+
+    async def get_ws_connection_by_name(
+        self, connection_name: str, workspace_id: str
+    ) -> Union[str, None]:
+        """
+
+        Returns connection id, if exists
+        @param connection_name: name of the connection
+        @param workspace_id: ws id
+        @return: Str connection id or None
+        """
+
+        conns: List = await self.get_ws_connections(workspace_id)
+
+        for c in conns:
+            if c["name"] == connection_name:
+                self.logger.info(
+                    f"getting connection id for connection - {connection_name}"
+                )
+                return c["connectionId"]
 
     async def get_configured_connectors(
         self, workspace_id: str, connector_type: ConnectionType
@@ -263,6 +281,44 @@ class AirByteBase:
         )
 
         return None
+
+    async def trigger_sync(self, connection_id: str) -> Dict:
+        """
+        Triggers an Airbyte connection
+
+        @param connection_id: source <> destination connection id
+        @return: JSON status
+        """
+
+        url = f"{self.base_url}/connections/sync"
+        headers = {"Content-Type": "application/json"}
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                url, headers=headers, json={"connectionId": connection_id}
+            ) as response:
+                if not response.ok:
+                    raise requests.HTTPError(response.status, await response.text())
+                return await response.json()
+
+    async def get_job_status(self, job_id: str) -> Dict:
+        """
+        Gets job Status
+
+        @param job_id: str
+        @return: JSON status
+        """
+
+        url = f"{self.base_url}/jobs/get"
+        headers = {"Content-Type": "application/json"}
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                url, headers=headers, json={"id": job_id}
+            ) as response:
+                if not response.ok:
+                    raise requests.HTTPError(response.status, await response.text())
+                return await response.json()
 
     async def configure_connector(
         self,
@@ -416,5 +472,7 @@ class AirByteBase:
                     )
                     raise requests.HTTPError(response.status, await response.text())
 
-                self.logger.info(f"successfully pulled image {repository_url}:{image_tag} into ws {workspace_id}")
+                self.logger.info(
+                    f"successfully pulled image {repository_url}:{image_tag} into ws {workspace_id}"
+                )
                 return await response.json()
