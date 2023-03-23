@@ -52,4 +52,6 @@ docs/_build/
 # IDE files
 .idea
 venv/
-jobs
+local_tests
+set_up_docker_registry/auth
+set_up_docker_registry/certs

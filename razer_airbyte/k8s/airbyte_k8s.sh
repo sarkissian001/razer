@@ -2,7 +2,7 @@
 
 # Set default values
 default_chart_name="airbyte"
-default_chart_version="0.43.29"
+default_chart_version="0.43.33"
 default_namespace="dev-local"
 
 # Define helper function

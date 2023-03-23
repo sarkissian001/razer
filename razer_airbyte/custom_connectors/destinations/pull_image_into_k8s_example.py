@@ -1,7 +1,8 @@
 import asyncio
 
-from core.src.razer.airbyte_base.airbyte_base import AirByteBase
-from jobs.myexample.airbyte_stuff import ConnectionType
+from razer_dagster_manager import ConnectionType
+from razer_dagster_manager import AirByteBase
+
 
 obj = AirByteBase()
 

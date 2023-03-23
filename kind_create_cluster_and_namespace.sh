@@ -38,4 +38,6 @@ if [ $NAMESPACE_EXISTS -eq 1 ]; then
 else
   kubectl create namespace "$NAMESPACE_NAME"
   echo "Namespace '$NAMESPACE_NAME' was created successfully."
+  kubectl config set-context --current --namespace="$NAMESPACE_NAME"
+
 fi
