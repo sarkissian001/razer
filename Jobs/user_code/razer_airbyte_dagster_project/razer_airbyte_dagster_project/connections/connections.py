@@ -9,9 +9,6 @@ from razer_dagster_manager import AirbyteConnectionsBase
 
 
 class AirbyteAddresses(AirbyteConnectionsBase):
-
-    CONNECTION_NAME = "fetch_addresses"
-
     def source(self, source_name="file-source-addresses"):
         return FileSource(
             name=source_name,
@@ -33,7 +30,7 @@ class AirbyteAddresses(AirbyteConnectionsBase):
 
     def connection(self, connection_name: str = "fetch_addresses"):
         return AirbyteConnection(
-            name=self.CONNECTION_NAME,
+            name=connection_name,
             source=self.source(),
             destination=self.destination(),
             stream_config={"addresses": AirbyteSyncMode.incremental_append_dedup()},
@@ -42,8 +39,6 @@ class AirbyteAddresses(AirbyteConnectionsBase):
 
 
 class AirbyteCities(AirbyteConnectionsBase):
-    CONNECTION_NAME = "fetch_cities"
-
     def source(self, source_name="file-source-cities"):
         return FileSource(
             name="file-source-cities",

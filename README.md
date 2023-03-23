@@ -1,5 +1,5 @@
 
-## Instructions 
+## Infrastructure  
 
 Instruction of how to obtain prereq for Mac OS users
 ```shell
@@ -33,3 +33,28 @@ make create-secret
 ## Useful Tools 
 
 Use open source **[OpenLense](https://github.com/MuhammedKalkan/OpenLens)** to monitor your local K8 clusters
+
+## Project Set-Up
+
+
+Navigate to [razer_dagster_manager](core%2Fmodules%2Frazer_dagster_manager) and install the python package
+
+```shell
+sh build_razer_dagster_manager.sh
+```
+
+Navigate to [razer_airbyte_dagster_project](Jobs%2Fuser_code%2Frazer_airbyte_dagster_project) and run 
+
+# (ATTENTION!!) 
+- You need to follow Connection Templating pattern specified in [connections.py](Jobs%2Fuser_code%2Frazer_airbyte_dagster_project%2Frazer_airbyte_dagster_project%2Fconnections%2Fconnections.py) to set up appropriate source destinations.
+  The sources and destinations are examples only.
+- You need to update the schedules and jobs as per your needs specified in [repository.py](Jobs%2Fuser_code%2Frazer_airbyte_dagster_project%2Frazer_airbyte_dagster_project%2Frepository.py)
+
+```shell
+pip install -e ".[dev]"
+```
+
+```shell
+dagit
+```
+
