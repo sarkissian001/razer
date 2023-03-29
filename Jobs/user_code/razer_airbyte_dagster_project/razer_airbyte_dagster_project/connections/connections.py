@@ -51,8 +51,8 @@ class AirbyteCities(AirbyteConnectionsBase):
     def destination(self, destination_name="cities_destination"):
         return BigqueryDestination(
             name=destination_name,
-            project_id="arcane-optics-380121",
-            dataset_id="arcane-optics-380121.sample_dataset",
+            project_id=os.environ.get("BQ_PROJECT_ID"),
+            dataset_id=os.environ.get("BQ_DATASET_ID"),
             dataset_location="europe-west2",
             loading_method=BigqueryDestination.StandardInserts(),
             credentials_json=os.environ.get("BQ_CREDENTIALS"),
