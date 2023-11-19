@@ -8,7 +8,9 @@ global:
   serviceAccountName: &service-account-name "airbyte-admin"
   ##  deploymentMode -- Deployment mode, whether or not render the default env vars and volumes in deployment spec
   deploymentMode: "oss"
+  edition: "community"
 
+  env_vars: {}
   ##  database [object] -- Object used to overrite database configuration(to use external DB)
   ##  database.secretName -- secret name where DB creds are stored
   ##  database.secretValue -- secret value for database password
@@ -45,8 +47,14 @@ global:
       type: "MINIO"
 
     ##  logs.minio.enabled Switch to enable or disable the Minio helm chart
+    ##  logs.minio.nodeSelector [object] Node labels for pod assignment
+    ##  logs.minio.tolerations [array] Tolerations for webapp pod assignment.
+    ##  logs.minio.affinity [object] Affinity and anti-affinity for webapp pod assignment.
     minio:
       enabled: true
+      nodeSelector: {}
+      tolerations: []
+      affinity: {}
 
     ##  logs.externalMinio.enabled Switch to enable or disable an external Minio instance
     ##  logs.externalMinio.host External Minio Host
@@ -110,6 +118,11 @@ global:
       ##  jobs.kube.annotations [object] key/value annotations applied to kube jobs
       annotations: {}
 
+      ## JOB_KUBE_LABELS
+      ## pod labels of the sync job and the default pod labels fallback for others jobs
+      ##  jobs.kube.labels [object] key/value labels applied to kube jobs
+      labels: {}
+
       ## JOB_KUBE_NODE_SELECTORS
       ## pod node selector of the sync job and the default pod node selector fallback for others jobs
       ##  jobs.kube.nodeSelector [object] key/value node selector applied to kube jobs
@@ -129,6 +142,20 @@ global:
       ## image pull secret to use for job pod
       ##  jobs.kube.main_container_image_pull_secret [string]  image pull secret to use for job pod
       main_container_image_pull_secret: ""
+
+      images:
+        ## JOB_KUBE_BUSYBOX_IMAGE
+        ## busybox image used by the job pod
+        ##   jobs.kube.images.busybox [string] busybox image used by the job pod
+        busybox: ""
+        ## JOB_KUBE_SOCAT_IMAGE
+        ## socat image used by the job pod
+        ##   jobs.kube.images.socat [string] socat image used by the job pod
+        socat: ""
+        ## JOB_KUBE_CURL_IMAGE
+        ## curl image used by the job pod
+        ##   jobs.kube.images.curl [string] curl image used by the job pod
+        curl: ""
 
 ## @section Common Parameters
 
@@ -286,7 +313,7 @@ webapp:
   ##  webapp.api.url The webapp API url.
   api:
     url: /api/v1/
-  connectorBuilderServer:
+  connector-builder-server:
     url: /connector-builder-api
 
   ##  webapp.fullstory.enabled Whether or not to enable fullstory
@@ -539,7 +566,7 @@ server:
     enabled: true
     initialDelaySeconds: 30
     periodSeconds: 10
-    timeoutSeconds: 1
+    timeoutSeconds: 10
     failureThreshold: 3
     successThreshold: 1
 
@@ -554,7 +581,7 @@ server:
     enabled: true
     initialDelaySeconds: 10
     periodSeconds: 10
-    timeoutSeconds: 1
+    timeoutSeconds: 10
     failureThreshold: 3
     successThreshold: 1
 
@@ -789,13 +816,7 @@ worker:
   ## extraEnv:
   ## - name: JOB_KUBE_TOLERATIONS
   ##   value: "key=airbyte-server,operator=Equals,value=true,effect=NoSchedule"
-#  extraEnv: []
-
-
-  # Connect to Private Repository
-  extraEnv:
-    - name: JOB_KUBE_MAIN_CONTAINER_IMAGE_PULL_SECRET
-      value: regcred
+  extraEnv: []
 
   ##  worker.extraVolumeMounts [array] Additional volumeMounts for worker container(s).
   ## Examples (when using `worker.containerSecurityContext.readOnlyRootFilesystem=true`):
@@ -817,6 +838,156 @@ worker:
 
   hpa:
     enabled: false
+
+  debug:
+    enabled: false
+
+  ## Container Orchestrator
+  ## image -- Orchestrator image
+
+  containerOrchestrator:
+    image: ""
+
+  ## current no exist documentations
+  activityMaxAttempt: ""
+  activityInitialDelayBetweenAttemptsSeconds: ""
+  activityMaxDelayBetweenAttemptsSeconds: ""
+
+  maxNotifyWorkers: 5
+
+## @section Workload Launcher Parameters
+
+workload-launcher:
+  enabled: false
+  ##  workload-launcher.replicaCount Number of workload launcher replicas
+  replicaCount: 1
+
+  ##  workload-launcher.image.repository The repository to use for the airbyte workload launcher image.
+  ##  workload-launcher.image.pullPolicy the pull policy to use for the airbyte workload launcher image
+  ##  workload-launcher.image.tag The airbyte workload launcher image tag. Defaults to the chart's AppVersion
+  image:
+    repository: airbyte/workload-launcher
+    pullPolicy: IfNotPresent
+
+  ##  workload-launcher.podAnnotations [object] Add extra annotations to the workload launcher pod(s)
+  ##
+  podAnnotations: {}
+
+  ##  workload-launcher.podLabels [object] Add extra labels to the workload launcher pod(s)
+  ##
+  podLabels: {}
+
+  ##  workload-launcher.containerSecurityContext Security context for the container
+  ## Examples:
+  ## containerSecurityContext:
+  ##    runAsNonRoot: true
+  ##    runAsUser: 1000
+  ##    readOnlyRootFilesystem: true
+  containerSecurityContext: {}
+
+  ## Configure extra options for the workload launcher containers' liveness and readiness probes
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+  ##  workload-launcher.livenessProbe.enabled Enable livenessProbe on the workload launcher
+  ##  workload-launcher.livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
+  ##  workload-launcher.livenessProbe.periodSeconds Period seconds for livenessProbe
+  ##  workload-launcher.livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
+  ##  workload-launcher.livenessProbe.failureThreshold Failure threshold for livenessProbe
+  ##  workload-launcher.livenessProbe.successThreshold Success threshold for livenessProbe
+  ##
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 1
+    failureThreshold: 3
+    successThreshold: 1
+
+  ##  workload-launcher.readinessProbe.enabled Enable readinessProbe on the workload launcher
+  ##  workload-launcher.readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
+  ##  workload-launcher.readinessProbe.periodSeconds Period seconds for readinessProbe
+  ##  workload-launcher.readinessProbe.timeoutSeconds Timeout seconds for readinessProbe
+  ##  workload-launcher.readinessProbe.failureThreshold Failure threshold for readinessProbe
+  ##  workload-launcher.readinessProbe.successThreshold Success threshold for readinessProbe
+  ##
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 1
+    failureThreshold: 3
+    successThreshold: 1
+
+  ## workload launcher resource requests and limits
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  ## We usually recommend not to specify default resources and to leave this as a conscious
+  ## choice for the user. This also increases chances charts run on environments with little
+  ## resources, such as Minikube. If you do want to specify resources, uncomment the following
+  ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  ##  workload-launcher.resources.limits [object] The resources limits for the workload launcher container
+  ##  workload-launcher.resources.requests [object] The requested resources for the workload launcher container
+  resources:
+    ## Example:
+    ## limits:
+    ##    cpu: 200m
+    ##    memory: 1Gi
+    limits: {}
+    ## Examples:
+    ## requests:
+    ##    memory: 256Mi
+    ##    cpu: 250m
+    requests: {}
+
+  ##  workload-launcher.nodeSelector [object] Node labels for pod assignment
+  ## Ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  nodeSelector: {}
+
+  ##  workload-launcher.tolerations [array] Tolerations for workload launcher pod assignment.
+  ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  ##
+  tolerations: []
+
+  ##  workload-launcher.affinity [object] Affinity and anti-affinity for workload launcher pod assignment.
+  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+  ##
+  affinity: {}
+
+  ##  workload-launcher.log.level The log level to log at.
+  log:
+    level: "INFO"
+
+  ##  workload-launcher.extraEnv [array] Additional env vars for workload launcher pod(s).
+  ## Example:
+  ##
+  ## extraEnv:
+  ## - name: JOB_KUBE_TOLERATIONS
+  ##   value: "key=airbyte-server,operator=Equals,value=true,effect=NoSchedule"
+  extraEnv: []
+
+  ##  worker.extraVolumeMounts [array] Additional volumeMounts for workload launcher container(s).
+  ## Examples (when using `workload launcher.containerSecurityContext.readOnlyRootFilesystem=true`):
+  ## extraVolumeMounts:
+  ##   - name: tmpdir
+  ##     mountPath: /tmp
+  ##
+  extraVolumeMounts: []
+
+  ##  workload-launcher.extraVolumes [array] Additional volumes for workload launcher pod(s).
+  ## Examples (when using `workload-launcher.containerSecurityContext.readOnlyRootFilesystem=true`):
+  ## extraVolumes:
+  ##   - name: tmpdir
+  ##     emptyDir: {}
+  ##
+  extraVolumes: []
+
+  extraContainers: []
+
+  hpa:
+    enabled: false
+
+  debug:
+    enabled: false
+
   ## Container Orchestrator
   ## enabled -- Enable or disable Orchestrator
   ## image -- Orchestrator image
@@ -831,9 +1002,6 @@ worker:
   activityMaxDelayBetweenAttemptsSeconds: ""
 
   maxNotifyWorkers: 5
-
-  strictComparisonNormalizationTag: "strict_comparison2"
-  strictComparisonNormalizationWorkspaces: ""
 
 ## @section Metrics parameters
 metrics:
@@ -1085,9 +1253,9 @@ temporal:
   ##  temporal.image.pullPolicy The pull policy for the temporal image
   ##  temporal.image.tag The temporal image tag to use
   image:
-    repository: airbyte/temporal-auto-setup
+    repository: temporalio/auto-setup
     pullPolicy: IfNotPresent
-    tag: "1.13.0"
+    tag: "1.20.1"
 
   ##  temporal.service.type The Kubernetes Service Type
   ##  temporal.service.port The temporal port and exposed kubernetes port
@@ -1115,7 +1283,7 @@ temporal:
   ## Examples (when using `temporal.containerSecurityContext.readOnlyRootFilesystem=true`):
   ## extraInitContainers:
   ##   - name: config-loader
-  ##     image: airbyte/temporal-auto-setup:1.13.4
+  ##     image: temporalio/auto-setup:1.20.1
   ##     command:
   ##       - /bin/sh
   ##       - -c
@@ -1228,6 +1396,11 @@ temporal:
 ##
 postgresql:
   enabled: true
+
+  ## image.repository Repository for airbyte-db statefulset
+  image:
+    repository: airbyte/db
+
   postgresqlUsername: airbyte
   postgresqlPassword: airbyte
   postgresqlDatabase: db-airbyte
@@ -1268,9 +1441,19 @@ externalDatabase:
 ##  minio.secretKey.password Minio Secret Key
 minio:
   enabled: true
+  endpoint: http://airbyte-minio-svc:9000
+
+  ## image.repository Minio image used by Minio helm chart
+  ## image.tag Minio tag image
+  image:
+    repository: minio/minio
+    tag: latest
+
   auth:
     rootUser: minio
     rootPassword: minio123
+  storage:
+    volumeClaimValue: 500Mi
 
 ## @section cron parameters
 
@@ -1457,30 +1640,284 @@ cron:
   ##   DATABASE_HOST: airbyte-db
   ##   DATABASE_PORT: 5432
   env_vars: {}
-connectorBuilderServer:
+
+connector-builder-server:
   enabled: true
+  ##  connector-builder-server.replicaCount Number of connector-builder-server replicas
+  replicaCount: 1
+
+  ##  connector-builder-server.image.repository The repository to use for the airbyte connector-builder-server image.
+  ##  connector-builder-server.image.pullPolicy the pull policy to use for the airbyte connector-builder-server image
+  ##  connector-builder-server.image.tag The airbyte connector-builder-server image tag. Defaults to the chart's AppVersion
+  image:
+    repository: airbyte/connector-builder-server
+    pullPolicy: IfNotPresent
+
+  ## Configure extra options for the server containers' liveness and readiness probes
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+  ##  server.livenessProbe.enabled Enable livenessProbe on the server
+  ##  server.livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
+  ##  server.livenessProbe.periodSeconds Period seconds for livenessProbe
+  ##  server.livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
+  ##  server.livenessProbe.failureThreshold Failure threshold for livenessProbe
+  ##  server.livenessProbe.successThreshold Success threshold for livenessProbe
+  ##
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 3
+    successThreshold: 1
+
+  ##  server.readinessProbe.enabled Enable readinessProbe on the server
+  ##  server.readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
+  ##  server.readinessProbe.periodSeconds Period seconds for readinessProbe
+  ##  server.readinessProbe.timeoutSeconds Timeout seconds for readinessProbe
+  ##  server.readinessProbe.failureThreshold Failure threshold for readinessProbe
+  ##  server.readinessProbe.successThreshold Success threshold for readinessProbe
+  ##
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 3
+    successThreshold: 1
+
+  ## connector-builder-server resource requests and limits
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  ## We usually recommend not to specify default resources and to leave this as a conscious
+  ## choice for the user. This also increases chances charts run on environments with little
+  ## resources, such as Minikube. If you do want to specify resources, uncomment the following
+  ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  ##  connector-builder-server.resources.limits [object] The resources limits for the connector-builder-server container
+  ##  connector-builder-server.resources.requests [object] The requested resources for the connector-builder-server container
+  resources:
+    ## Example:
+    ## limits:
+    ##    cpu: 200m
+    ##    memory: 1Gi
+    limits: {}
+    ## Examples:
+    ## requests:
+    ##    memory: 256Mi
+    ##    cpu: 250m
+    requests: {}
+
+
+  ##  connector-builder-server.log.level The log level to log at.
+  log:
+    level: "INFO"
+
+  env_vars: {}
   service:
-    port: 8003
+    port: 80
+
+airbyte-api-server:
+  enabled: true
+  ##  airbyte-api-server.replicaCount Number of airbyte-api-server replicas
+  replicaCount: 1
+
+  ##  airbyte-api-server.image.repository The repository to use for the airbyte airbyte-api-server image.
+  ##  airbyte-api-server.image.pullPolicy the pull policy to use for the airbyte airbyte-api-server image
+  ##  airbyte-api-server.image.tag The airbyte airbyte-api-server image tag. Defaults to the chart's AppVersion
+  image:
+    repository: airbyte/airbyte-api-server
+    pullPolicy: IfNotPresent
+
+  ## Configure extra options for the server containers' liveness and readiness probes
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+  ##  server.livenessProbe.enabled Enable livenessProbe on the server
+  ##  server.livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
+  ##  server.livenessProbe.periodSeconds Period seconds for livenessProbe
+  ##  server.livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
+  ##  server.livenessProbe.failureThreshold Failure threshold for livenessProbe
+  ##  server.livenessProbe.successThreshold Success threshold for livenessProbe
+  ##
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 3
+    successThreshold: 1
+
+  ##  server.readinessProbe.enabled Enable readinessProbe on the server
+  ##  server.readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
+  ##  server.readinessProbe.periodSeconds Period seconds for readinessProbe
+  ##  server.readinessProbe.timeoutSeconds Timeout seconds for readinessProbe
+  ##  server.readinessProbe.failureThreshold Failure threshold for readinessProbe
+  ##  server.readinessProbe.successThreshold Success threshold for readinessProbe
+  ##
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 3
+    successThreshold: 1
+
+  ## airbyte-api-server resource requests and limits
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  ## We usually recommend not to specify default resources and to leave this as a conscious
+  ## choice for the user. This also increases chances charts run on environments with little
+  ## resources, such as Minikube. If you do want to specify resources, uncomment the following
+  ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  ##  airbyte-api-server.resources.limits [object] The resources limits for the airbyte-api-server container
+  ##  airbyte-api-server.resources.requests [object] The requested resources for the airbyte-api-server container
+  resources:
+    ## Example:
+    ## limits:
+    ##    cpu: 200m
+    ##    memory: 1Gi
+    limits: {}
+    ## Examples:
+    ## requests:
+    ##    memory: 256Mi
+    ##    cpu: 250m
+    requests: {}
 
 
-config:
-  connectors:
-    - name: source-file
-      docker_image: airbyte/source-file:0.1.1
-      spec:
-        documentationUrl: https://airbyte.io/integrations/sources/file
-        icon: https://raw.githubusercontent.com/airbytehq/airbyte/master/airbyte-logo.png
-        documentation:
-          description: Airbyte's File source allows users to read data from files on local or mounted file systems.
-          stepByStepInstructions:
-            - Go to your dashboard and click "Create New Connection"
-            - Choose "File" as the source.
-            - Fill in the form specifying where the file is located.
-          destinationType: None
-          language: EN
-          isGetConfigSupported: true
-          isGetSpecSupported: true
-          supportsIncremental: true
-          supportsNormalization: false
-      sourceRequirements:
-        - airbyte/source-file
+  ##  airbyte-api-server.log.level The log level to log at.
+  log:
+    level: "INFO"
+
+  env_vars: {}
+  service:
+    port: 80
+
+  ## Configure the ingress resource that allows you to access the Airbyte API.
+  ## ref: http://kubernetes.io/docs/user-guide/ingress/
+  ##  webapp.ingress.enabled Set to true to enable ingress record generation
+  ##  webapp.ingress.className Specifies ingressClassName for clusters >= 1.18+
+  ##  webapp.ingress.annotations [object] Ingress annotations done as key:value pairs
+  ##  webapp.ingress.hosts The list of hostnames to be covered with this ingress record.
+  ##  webapp.ingress.tls [array] Custom ingress TLS configuration
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+    hosts: []
+    # - host: chart-example.local
+    #   paths:
+    #   - path: /
+    #     pathType: ImplementationSpecific
+
+    tls: []
+    # - secretName: chart-example-tls
+    #   hosts:
+    #   - chart-example.local
+
+keycloak:
+  enabled: false
+
+  auth:
+    adminUsername: airbyteAdmin
+    adminPassword: keycloak123
+
+keycloak-setup:
+  enabled: false
+
+workload-api:
+  enabled: false
+
+  bearerToken: token
+
+  ##  workload-api.replicaCount Number of airbyte-api-server replicas
+  replicaCount: 1
+
+  ##  workload-api.image.repository The repository to use for the airbyte-workload-api-server image.
+  ##  workload-api.image.pullPolicy the pull policy to use for the airbyte-workload-api-server image
+  ##  workload-api.image.tag The airbyte-workload-api-server image tag. Defaults to the chart's AppVersion
+  image:
+    repository: airbyte/airbyte-workload-api-server
+    pullPolicy: IfNotPresent
+
+  ## Configure extra options for the server containers' liveness and readiness probes
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+  ##  workload-api.livenessProbe.enabled Enable livenessProbe on the server
+  ##  workload-api.livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
+  ##  workload-api.livenessProbe.periodSeconds Period seconds for livenessProbe
+  ##  workload-api.livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
+  ##  workload-api.livenessProbe.failureThreshold Failure threshold for livenessProbe
+  ##  workload-api.livenessProbe.successThreshold Success threshold for livenessProbe
+  ##
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 3
+    successThreshold: 1
+
+  ##  workload-api.readinessProbe.enabled Enable readinessProbe on the server
+  ##  workload-api.readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
+  ##  workload-api.readinessProbe.periodSeconds Period seconds for readinessProbe
+  ##  workload-api.readinessProbe.timeoutSeconds Timeout seconds for readinessProbe
+  ##  workload-api.readinessProbe.failureThreshold Failure threshold for readinessProbe
+  ##  workload-api.readinessProbe.successThreshold Success threshold for readinessProbe
+  ##
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 3
+    successThreshold: 1
+
+  ## airbyte-workload-api-server resource requests and limits
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  ## We usually recommend not to specify default resources and to leave this as a conscious
+  ## choice for the user. This also increases chances charts run on environments with little
+  ## resources, such as Minikube. If you do want to specify resources, uncomment the following
+  ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  ##  workload-api.resources.limits [object] The resources limits for the airbyte-workload-api-server container
+  ##  workload-api.resources.requests [object] The requested resources for the airbyte-workload-api-server container
+  resources:
+    ## Example:
+    ## limits:
+    ##    cpu: 200m
+    ##    memory: 1Gi
+    limits: {}
+    ## Examples:
+    ## requests:
+    ##    memory: 256Mi
+    ##    cpu: 250m
+    requests: {}
+
+
+  ##  airbyte-workload-api-server.log.level The log level to log at.
+  log:
+    level: "INFO"
+
+  nodeSelector: {}
+  env_vars: {}
+  service:
+    port: 8007
+
+  ## Configure the ingress resource that allows you to access the Airbyte Workload API.
+  ## ref: http://kubernetes.io/docs/user-guide/ingress/
+  ##  workload-api.ingress.enabled Set to true to enable ingress record generation
+  ##  workload-api.ingress.className Specifies ingressClassName for clusters >= 1.18+
+  ##  workload-api.ingress.annotations [object] Ingress annotations done as key:value pairs
+  ##  workload-api.ingress.hosts The list of hostnames to be covered with this ingress record.
+  ##  workload-api.ingress.tls [array] Custom ingress TLS configuration
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+    hosts: []
+    # - host: chart-example.local
+    #   paths:
+    #   - path: /
+    #     pathType: ImplementationSpecific
+
+    tls: []
+    # - secretName: chart-example-tls
+    #   hosts:
+    #   - chart-example.local
