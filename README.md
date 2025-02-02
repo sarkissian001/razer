@@ -1,3 +1,8 @@
+## Project
+
+This project integrates Airbyte and Dagster to create a fully managed ETL pipeline that can scale using Kubernetes. I have also included examples of how you can configure your own connectors.
+
+
 
 ## Infrastructure  
 
